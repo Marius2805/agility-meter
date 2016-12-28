@@ -1,0 +1,14 @@
+{
+    "name": "marius2805/agility-meter",
+    "description": "An academic tool for gathering statistics about agile code changes",
+    "type": "project",
+    "license": "GNU v3",
+    "authors": [
+        {
+            "name": "Marius Meißner",
+            "email": "info@marius-meissner.net"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
