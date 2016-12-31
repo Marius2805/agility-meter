@@ -6,7 +6,7 @@ use Symfony\Component\Process\Process;
  * Class CodeDifferenceRepository
  * @package Marius2805\AgilityMeter\Src\VersionControl
  */
-class CodeDifferenceRepository
+class CommitDifferenceRepository
 {
     /**
      * @var string

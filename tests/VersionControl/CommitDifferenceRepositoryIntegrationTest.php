@@ -11,7 +11,7 @@ use Marius2805\AgilityMeter\Tests\General\RepositoryIntegrationTestCase;
  * Class CodeDifferenceRepositoryIntegrationTest
  * @package Marius2805\AgilityMeter\Tests\VersionControl
  */
-class CodeDifferenceRepositoryIntegrationTest extends RepositoryIntegrationTestCase
+class CommitDifferenceRepositoryIntegrationTest extends RepositoryIntegrationTestCase
 {
     const FIXTURE_REPOSITORY = 'git02';
     const BASE_COMMIT = '2576d2dfabd9e67fb4b535bb86097abfd49ffaf6';
