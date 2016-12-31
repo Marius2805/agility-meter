@@ -2,7 +2,7 @@
 namespace Marius2805\AgilityMeter\Tests\VersionControl;
 
 use Marius2805\AgilityMeter\Src\VersionControl\CommitDifference;
-use Marius2805\AgilityMeter\Src\VersionControl\CodeDifferenceRepository;
+use Marius2805\AgilityMeter\Src\VersionControl\CommitDifferenceRepository;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitRepository;
 use Marius2805\AgilityMeter\Src\VersionControl\FileChange;
 use Marius2805\AgilityMeter\Tests\General\RepositoryIntegrationTestCase;
@@ -22,7 +22,7 @@ class CodeDifferenceRepositoryIntegrationTest extends RepositoryIntegrationTestC
     private $commitRepository;
 
     /**
-     * @var CodeDifferenceRepository
+     * @var CommitDifferenceRepository
      */
     private $differenceRepository;
 
@@ -32,7 +32,7 @@ class CodeDifferenceRepositoryIntegrationTest extends RepositoryIntegrationTestC
 
         $this->prepareFixtures(self::FIXTURE_REPOSITORY);
         $this->commitRepository = new CommitRepository($this->testFolder . '/' . self::FIXTURE_REPOSITORY);
-        $this->differenceRepository = new CodeDifferenceRepository($this->testFolder . '/' . self::FIXTURE_REPOSITORY);
+        $this->differenceRepository = new CommitDifferenceRepository($this->testFolder . '/' . self::FIXTURE_REPOSITORY);
     }
 
     public function test_getDifference_fileAdded()
