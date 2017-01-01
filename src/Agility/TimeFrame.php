@@ -28,7 +28,7 @@ class TimeFrame
     /**
      * @var CommitDifference[]
      */
-    private $commitDiffs;
+    private $commitDiffs = [];
 
     /**
      * TimeFrame constructor.
