@@ -14,12 +14,19 @@ class CommitDifferenceRepository
     private $directory;
 
     /**
+     * @var string
+     */
+    private $fileExtension;
+
+    /**
      * CommitRepository constructor.
      * @param string $directory
+     * @param string $fileExtension
      */
-    public function __construct(string $directory)
+    public function __construct(string $directory, string $fileExtension = 'php')
     {
         $this->directory = $directory;
+        $this->fileExtension = strtolower($fileExtension);
     }
 
     /**
@@ -32,6 +39,7 @@ class CommitDifferenceRepository
         $process = new Process('cd ' . $this->directory . ' && git diff --stat  ' . $previous->getHash() . ' ' . $current->getHash() . ' | grep \'|\' | grep -v \'| Bin\'');
         $process->run();
         $fileChanges = $this->parseGitDiff($process->getOutput());
+        $fileChanges = $this->filterFileChanges($fileChanges);
 
         return new CommitDifference($previous, $current, $fileChanges);
     }
@@ -58,5 +66,17 @@ class CommitDifferenceRepository
         }
 
         return $fileChanges;
+    }
+
+    /**
+     * @param FileChange[] $fileChanges
+     * @return array
+     */
+    private function filterFileChanges(array $fileChanges) : array
+    {
+        return array_filter($fileChanges, function (FileChange $fileChange) {
+            $fileExtension = '.' . strtolower(substr($fileChange->getFileName(), -(strlen($this->fileExtension))));
+            return $fileExtension == ('.' . $this->fileExtension);
+        });
     }
 }

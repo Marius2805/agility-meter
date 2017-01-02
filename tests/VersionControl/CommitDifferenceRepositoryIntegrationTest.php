@@ -32,7 +32,7 @@ class CommitDifferenceRepositoryIntegrationTest extends RepositoryIntegrationTes
 
         $this->prepareFixtures(self::FIXTURE_REPOSITORY);
         $this->commitRepository = new CommitRepository($this->testFolder . '/' . self::FIXTURE_REPOSITORY);
-        $this->differenceRepository = new CommitDifferenceRepository($this->testFolder . '/' . self::FIXTURE_REPOSITORY);
+        $this->differenceRepository = new CommitDifferenceRepository($this->testFolder . '/' . self::FIXTURE_REPOSITORY, 'txt');
     }
 
     public function test_getDifference_fileAdded()
@@ -125,6 +125,16 @@ class CommitDifferenceRepositoryIntegrationTest extends RepositoryIntegrationTes
         $commits = $this->commitRepository->getSince(self::BASE_COMMIT);
         $previous = $commits[7];
         $current = $commits[8];
+
+        $difference = $this->differenceRepository->getDifference($previous, $current);
+        self::assertCount(0, $difference->getFileChanges());
+    }
+
+    public function test_getDifference_onlyFileExtension()
+    {
+        $commits = $this->commitRepository->getSince(self::BASE_COMMIT);
+        $previous = $commits[8];
+        $current = $commits[9];
 
         $difference = $this->differenceRepository->getDifference($previous, $current);
         self::assertCount(0, $difference->getFileChanges());
