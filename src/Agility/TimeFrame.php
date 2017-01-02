@@ -41,6 +41,11 @@ class TimeFrame
     private $codeGrowth = 0;
 
     /**
+     * @var int
+     */
+    private $absoluteTotalChanges;
+
+    /**
      * TimeFrame constructor.
      * @param string $label
      * @param Carbon $start
@@ -90,6 +95,7 @@ class TimeFrame
      */
     public function addCommitDiff(CommitDifference $commitDifference)
     {
+        $this->absoluteTotalChanges = null;
         $this->commitDiffs[] = $commitDifference;
     }
 
@@ -125,5 +131,32 @@ class TimeFrame
     public function setCodeGrowth(int $codeGrowth)
     {
         $this->codeGrowth = $codeGrowth;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAbsoluteTotalChanges(): int
+    {
+        if ($this->absoluteTotalChanges == null) {
+            $this->absoluteTotalChanges = 0;
+
+            foreach ($this->commitDiffs as $commitDiff) {
+                foreach ($commitDiff->getFileChanges() as $fileChange) {
+                    $this->absoluteTotalChanges += $fileChange->getAddedRows();
+                    $this->absoluteTotalChanges += $fileChange->getRemovedRows();
+                }
+            }
+        }
+
+        return $this->absoluteTotalChanges;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNormalizedTotalChanges(): int
+    {
+        return $this->getAbsoluteTotalChanges() - $this->codeGrowth;
     }
 }
