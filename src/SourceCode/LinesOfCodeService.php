@@ -1,21 +1,16 @@
 <?php
 namespace Marius2805\AgilityMeter\Src\SourceCode;
 
-use GitWrapper\GitWrapper;
 use Marius2805\AgilityMeter\Src\VersionControl\Commit;
+use Marius2805\AgilityMeter\Src\VersionControl\GitInteraction;
 use Symfony\Component\Process\Process;
 
 /**
  * Class LinesOfCodeService
  * @package Marius2805\AgilityMeter\Src\SourceCode
  */
-class LinesOfCodeService
+class LinesOfCodeService extends GitInteraction
 {
-    /**
-     * @var string
-     */
-    private $directory;
-
     /**
      * @var string
      */
@@ -28,8 +23,8 @@ class LinesOfCodeService
      */
     public function __construct(string $fileExtension, string $directory)
     {
+        parent::__construct($directory);
         $this->fileExtension = $fileExtension;
-        $this->directory = $directory;
     }
 
     /**
@@ -46,15 +41,6 @@ class LinesOfCodeService
         $this->checkout('master');
 
         return $this->buildSum($process->getOutput());
-    }
-
-    /**
-     * @param string $ref
-     */
-    private function checkout(string $ref)
-    {
-        $gitCheckout = new Process('cd ' . $this->directory . ' && git checkout ' . $ref);
-        $gitCheckout->run();
     }
 
     /**
