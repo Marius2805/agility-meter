@@ -58,4 +58,14 @@ class SummaryStatistic
     {
         return $this->timeFrames;
     }
+
+    /**
+     * Get lines of codes delta between start and end
+     *
+     * @return int
+     */
+    public function getTotalGrowth() : int
+    {
+        return $this->endLinesOfCode - $this->startLinesOfCode;
+    }
 }
