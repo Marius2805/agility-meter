@@ -23,6 +23,16 @@ class SummaryStatistic
     private $timeFrames;
 
     /**
+     * @var int
+     */
+    private $absoluteChanges;
+
+    /**
+     * @var int
+     */
+    private $normalizedChanges;
+
+    /**
      * SummaryStatistic constructor.
      * @param int $startLinesOfCode
      * @param int $endLinesOfCode
@@ -67,5 +77,33 @@ class SummaryStatistic
     public function getTotalGrowth() : int
     {
         return $this->endLinesOfCode - $this->startLinesOfCode;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAbsoluteChanges(): int
+    {
+        if ($this->absoluteChanges == null) {
+            $this->absoluteChanges = 0;
+
+            foreach ($this->timeFrames as $timeFrame) {
+                $this->absoluteChanges += $timeFrame->getAbsoluteTotalChanges();
+            }
+        }
+
+        return $this->absoluteChanges;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNormalizedChanges(): int
+    {
+        if ($this->normalizedChanges == null) {
+            $this->normalizedChanges = $this->getAbsoluteChanges() - $this->getTotalGrowth();
+        }
+
+        return $this->normalizedChanges;
     }
 }
