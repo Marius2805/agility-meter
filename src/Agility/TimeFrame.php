@@ -31,6 +31,11 @@ class TimeFrame
     private $commitDiffs = [];
 
     /**
+     * @var int
+     */
+    private $numberOfTests = 0;
+
+    /**
      * TimeFrame constructor.
      * @param string $label
      * @param Carbon $start
@@ -81,5 +86,21 @@ class TimeFrame
     public function addCommitDiff(CommitDifference $commitDifference)
     {
         $this->commitDiffs[] = $commitDifference;
+    }
+
+    /**
+     * @param int $numberOfTests
+     */
+    public function setNumberOfTests(int $numberOfTests)
+    {
+        $this->numberOfTests = $numberOfTests;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNumberOfTests(): int
+    {
+        return $this->numberOfTests;
     }
 }

@@ -8,6 +8,7 @@ use Marius2805\AgilityMeter\Src\Agility\TimeFrame;
 use Marius2805\AgilityMeter\Src\Agility\TimeFrameFactory;
 use Marius2805\AgilityMeter\Src\Agility\TimeFrameInterval;
 use Marius2805\AgilityMeter\Src\SourceCode\LinesOfCodeService;
+use Marius2805\AgilityMeter\Src\SourceCode\TestStatisticsService;
 use Marius2805\AgilityMeter\Src\VersionControl\Commit;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitDifference;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitDifferenceRepository;
@@ -39,6 +40,11 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
      */
     private $linesOfCodeService;
 
+    /**
+     * @var TestStatisticsService|\PHPUnit_Framework_MockObject_MockObject
+     */
+    private $testStatisticsService;
+
     protected function setUp()
     {
         $this->commitRepository = $this->getMockBuilder(CommitRepository::class)->disableOriginalConstructor()->getMock();
@@ -51,7 +57,10 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
         $this->linesOfCodeService = $this->getMockBuilder(LinesOfCodeService::class)->disableOriginalConstructor()->getMock();
         $this->linesOfCodeService->method('getLinesOfCode')->willReturn(0);
 
-        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService);
+        $this->testStatisticsService = $this->getMockBuilder(TestStatisticsService::class)->disableOriginalConstructor()->getMock();
+        $this->testStatisticsService->method('getNumberOfTests')->willReturn(0);
+
+        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService, $this->testStatisticsService);
     }
 
     /**
@@ -75,7 +84,7 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
 
         $this->commitRepository->method('getSince')->willReturn([new Commit('dummy', new Carbon())]);
 
-        $service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService, $timeFrameFactory);
+        $service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService, $this->testStatisticsService, $timeFrameFactory);
         $service->getStatistic($baseCommit, TimeFrameInterval::CALENDAR_MONTH);
     }
 
@@ -169,10 +178,44 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
             ];
         }));
 
-        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService);
+        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService, $this->testStatisticsService);
 
         $statistic = $this->service->getStatistic(new Commit('123', Carbon::today()->day(1)), TimeFrameInterval::CALENDAR_MONTH);
         self::assertEquals(10, $statistic->getStartLinesOfCode());
         self::assertEquals(30, $statistic->getEndLinesOfCode());
+    }
+
+    public function test_getStatistic_correctNumberOfTests()
+    {
+        $this->testStatisticsService = $this->getMockBuilder(TestStatisticsService::class)->disableOriginalConstructor()->getMock();
+        $this->testStatisticsService->method('getNumberOfTests')->will(self::returnCallback(function (Commit $commit) : int {
+            switch ($commit->getHash()) {
+                case 'b2':
+                    return 100;
+                    break;
+                case 'd4':
+                    return 300;
+                    break;
+                default:
+                    return 0;
+            }
+        }));
+
+        $this->commitRepository->method('getSince')->will(self::returnCallback(function (string $baseHash) : array {
+            return [
+                new Commit('a1', Carbon::today()->day(5)->subMonths(2)),
+                new Commit('b2', Carbon::today()->day(10)->subMonths(2)),
+                new Commit('c3', Carbon::today()->day(10)),
+                new Commit('d4', Carbon::today()->day(15))
+            ];
+        }));
+
+        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService, $this->testStatisticsService);
+
+        $statistic = $this->service->getStatistic(new Commit('123', Carbon::today()->day(5)->subMonths(2)), TimeFrameInterval::CALENDAR_MONTH);
+        self::assertCount(3, $statistic->getTimeFrames());
+        self::assertEquals(100, $statistic->getTimeFrames()[0]->getNumberOfTests());
+        self::assertEquals(100, $statistic->getTimeFrames()[1]->getNumberOfTests());
+        self::assertEquals(300, $statistic->getTimeFrames()[2]->getNumberOfTests());
     }
 }

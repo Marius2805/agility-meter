@@ -3,6 +3,7 @@ namespace Marius2805\AgilityMeter\Src\Agility;
 
 use Assert\Assertion;
 use Marius2805\AgilityMeter\Src\SourceCode\LinesOfCodeService;
+use Marius2805\AgilityMeter\Src\SourceCode\TestStatisticsService;
 use Marius2805\AgilityMeter\Src\VersionControl\Commit;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitDifferenceRepository;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitRepository;
@@ -29,6 +30,11 @@ class StatisticService
     private $linesOfCodeService;
 
     /**
+     * @var TestStatisticsService
+     */
+    private $testStatisticsService;
+
+    /**
      * @var TimeFrameFactory
      */
     private $timeFrameFactory;
@@ -38,13 +44,15 @@ class StatisticService
      * @param CommitRepository $commitRepository
      * @param CommitDifferenceRepository $differenceRepository
      * @param LinesOfCodeService $linesOfCodeService
-     * @param TimeFrameFactory $timeFrameFactory
+     * @param TestStatisticsService $testStatisticsService
+     * @internal param TimeFrameFactory $timeFrameFactory
      */
-    public function __construct(CommitRepository $commitRepository, CommitDifferenceRepository $differenceRepository, LinesOfCodeService $linesOfCodeService, TimeFrameFactory $timeFrameFactory = null)
+    public function __construct(CommitRepository $commitRepository, CommitDifferenceRepository $differenceRepository, LinesOfCodeService $linesOfCodeService, TestStatisticsService $testStatisticsService, TimeFrameFactory $timeFrameFactory = null)
     {
         $this->commitRepository = $commitRepository;
         $this->differenceRepository = $differenceRepository;
         $this->linesOfCodeService = $linesOfCodeService;
+        $this->testStatisticsService = $testStatisticsService;
         $this->timeFrameFactory = $timeFrameFactory ?: new TimeFrameFactory();
     }
 
@@ -65,6 +73,7 @@ class StatisticService
         }
 
         $this->distributeCommits($timeFrames, $commits);
+        $this->determineNumberOfTests($timeFrames);
 
         $startLoc = $this->linesOfCodeService->getLinesOfCode($commits[0]);
         $endLoc = $this->linesOfCodeService->getLinesOfCode(end($commits));
@@ -88,6 +97,24 @@ class StatisticService
             }
 
             $currentFrame->addCommitDiff($diff);
+        }
+    }
+
+    /**
+     * @param TimeFrame[] $timeFrames
+     */
+    private function determineNumberOfTests(array $timeFrames)
+    {
+        foreach ($timeFrames as $i => $timeFrame) {
+            if (!empty($timeFrame->getCommitDiffs())) {
+                $commitDiffs = $timeFrame->getCommitDiffs();
+                $lastCommit = end($commitDiffs)->getCurrentCommit();
+                $numberOfTests = $this->testStatisticsService->getNumberOfTests($lastCommit);
+                $timeFrame->setNumberOfTests($numberOfTests);
+            } elseif ($i > 0) {
+                $lastNumberOfTests = $timeFrames[$i - 1]->getNumberOfTests();
+                $timeFrame->setNumberOfTests($lastNumberOfTests);
+            }
         }
     }
 }
