@@ -7,6 +7,7 @@ use Marius2805\AgilityMeter\Src\Agility\SummaryStatistic;
 use Marius2805\AgilityMeter\Src\Agility\TimeFrame;
 use Marius2805\AgilityMeter\Src\Agility\TimeFrameFactory;
 use Marius2805\AgilityMeter\Src\Agility\TimeFrameInterval;
+use Marius2805\AgilityMeter\Src\SourceCode\LinesOfCodeService;
 use Marius2805\AgilityMeter\Src\VersionControl\Commit;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitDifference;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitDifferenceRepository;
@@ -33,6 +34,11 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
      */
     private $commitDifferenceRepository;
 
+    /**
+     * @var LinesOfCodeService|\PHPUnit_Framework_MockObject_MockObject
+     */
+    private $linesOfCodeService;
+
     protected function setUp()
     {
         $this->commitRepository = $this->getMockBuilder(CommitRepository::class)->disableOriginalConstructor()->getMock();
@@ -42,7 +48,10 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
             return new CommitDifference($previous, $current, []);
         }));
 
-        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository);
+        $this->linesOfCodeService = $this->getMockBuilder(LinesOfCodeService::class)->disableOriginalConstructor()->getMock();
+        $this->linesOfCodeService->method('getLinesOfCode')->willReturn(0);
+
+        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService);
     }
 
     /**
@@ -64,9 +73,9 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
             ->with($baseCommit)
             ->willReturn([new TimeFrame('test', Carbon::today(), Carbon::today())]);
 
-        $this->commitRepository->method('getSince')->willReturn([]);
+        $this->commitRepository->method('getSince')->willReturn([new Commit('dummy', new Carbon())]);
 
-        $service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $timeFrameFactory);
+        $service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService, $timeFrameFactory);
         $service->getStatistic($baseCommit, TimeFrameInterval::CALENDAR_MONTH);
     }
 
@@ -134,5 +143,36 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
         self::assertEquals('c3', $statistic->getTimeFrames()[2]->getCommitDiffs()[0]->getCurrentCommit()->getHash());
         self::assertEquals('c3', $statistic->getTimeFrames()[2]->getCommitDiffs()[1]->getPreviousCommit()->getHash());
         self::assertEquals('d4', $statistic->getTimeFrames()[2]->getCommitDiffs()[1]->getCurrentCommit()->getHash());
+    }
+
+    public function test_getStatistic_correctLinesOfCode()
+    {
+        $this->linesOfCodeService = $this->getMockBuilder(LinesOfCodeService::class)->disableOriginalConstructor()->getMock();
+        $this->linesOfCodeService->method('getLinesOfCode')->will(self::returnCallback(function (Commit $commit) : int {
+            switch ($commit->getHash()) {
+                case 'a1':
+                    return 10;
+                    break;
+                case 'c3':
+                    return 30;
+                    break;
+                default:
+                    return 0;
+            }
+        }));
+
+        $this->commitRepository->method('getSince')->will(self::returnCallback(function (string $baseHash) : array {
+            return [
+                new Commit('a1', Carbon::today()->day(5)),
+                new Commit('b2', Carbon::today()->day(10)),
+                new Commit('c3', Carbon::today()->day(15))
+            ];
+        }));
+
+        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService);
+
+        $statistic = $this->service->getStatistic(new Commit('123', Carbon::today()->day(1)), TimeFrameInterval::CALENDAR_MONTH);
+        self::assertEquals(10, $statistic->getStartLinesOfCode());
+        self::assertEquals(30, $statistic->getEndLinesOfCode());
     }
 }

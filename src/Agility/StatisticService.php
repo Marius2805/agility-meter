@@ -2,6 +2,7 @@
 namespace Marius2805\AgilityMeter\Src\Agility;
 
 use Assert\Assertion;
+use Marius2805\AgilityMeter\Src\SourceCode\LinesOfCodeService;
 use Marius2805\AgilityMeter\Src\VersionControl\Commit;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitDifferenceRepository;
 use Marius2805\AgilityMeter\Src\VersionControl\CommitRepository;
@@ -23,6 +24,11 @@ class StatisticService
     private $differenceRepository;
 
     /**
+     * @var LinesOfCodeService
+     */
+    private $linesOfCodeService;
+
+    /**
      * @var TimeFrameFactory
      */
     private $timeFrameFactory;
@@ -31,12 +37,14 @@ class StatisticService
      * StatisticService constructor.
      * @param CommitRepository $commitRepository
      * @param CommitDifferenceRepository $differenceRepository
+     * @param LinesOfCodeService $linesOfCodeService
      * @param TimeFrameFactory $timeFrameFactory
      */
-    public function __construct(CommitRepository $commitRepository, CommitDifferenceRepository $differenceRepository, TimeFrameFactory $timeFrameFactory = null)
+    public function __construct(CommitRepository $commitRepository, CommitDifferenceRepository $differenceRepository, LinesOfCodeService $linesOfCodeService, TimeFrameFactory $timeFrameFactory = null)
     {
         $this->commitRepository = $commitRepository;
         $this->differenceRepository = $differenceRepository;
+        $this->linesOfCodeService = $linesOfCodeService;
         $this->timeFrameFactory = $timeFrameFactory ?: new TimeFrameFactory();
     }
 
@@ -51,9 +59,16 @@ class StatisticService
 
         $timeFrames = $this->timeFrameFactory->getMonthInterval($baseCommit);
         $commits = $this->commitRepository->getSince($baseCommit->getHash());
+
+        if (empty($commits)) {
+            throw new \RuntimeException("No commits found for base Commit " . $baseCommit->getHash());
+        }
+
         $this->distributeCommits($timeFrames, $commits);
 
-        return new SummaryStatistic(0, 0, $timeFrames);
+        $startLoc = $this->linesOfCodeService->getLinesOfCode($commits[0]);
+        $endLoc = $this->linesOfCodeService->getLinesOfCode(end($commits));
+        return new SummaryStatistic($startLoc, $endLoc, $timeFrames);
     }
 
     /**

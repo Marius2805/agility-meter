@@ -41,6 +41,14 @@ class CommitRepository
     }
 
     /**
+     * @return string
+     */
+    public function getDirectory(): string
+    {
+        return $this->directory;
+    }
+
+    /**
      * @param array $lines
      * @param string $baseHash
      * @return Commit[]
