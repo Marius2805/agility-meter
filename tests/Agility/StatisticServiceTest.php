@@ -218,4 +218,43 @@ class StatisticServiceTest extends \PHPUnit_Framework_TestCase
         self::assertEquals(100, $statistic->getTimeFrames()[1]->getNumberOfTests());
         self::assertEquals(300, $statistic->getTimeFrames()[2]->getNumberOfTests());
     }
+
+    public function test_getStatistic_correctAverageCodeGrowth()
+    {
+        /** @var Commit[] $commits */
+        $commits = [
+            new Commit('a1', new Carbon('15.01.2016')),
+            new Commit('b2', new Carbon('20.01.2016')),
+            new Commit('c3', new Carbon('25.02.2016')),
+            new Commit('d4', new Carbon('05.03.2016'))
+        ];
+
+        $this->commitRepository->method('getSince')->will(self::returnCallback(function (string $baseHash) use ($commits) : array {
+            return $commits;
+        }));
+
+        $this->linesOfCodeService = $this->getMockBuilder(LinesOfCodeService::class)->disableOriginalConstructor()->getMock();
+        $this->linesOfCodeService->method('getLinesOfCode')->will(self::returnCallback(function (Commit $commit) : int {
+            switch ($commit->getHash()) {
+                case 'a1':
+                    return 1000;
+                    break;
+                case 'd4':
+                    return 2000;
+                    break;
+                default:
+                    return 0;
+            }
+        }));
+
+        $this->service = new StatisticService($this->commitRepository, $this->commitDifferenceRepository, $this->linesOfCodeService, $this->testStatisticsService);
+
+        $statistic = $this->service->getStatistic($commits[0], TimeFrameInterval::CALENDAR_MONTH);
+        self::assertInstanceOf(SummaryStatistic::class, $statistic);
+        self::assertGreaterThan(3, $statistic->getTimeFrames());
+
+        self::assertEquals(620, $statistic->getTimeFrames()[0]->getCodeGrowth());
+        self::assertEquals(580, $statistic->getTimeFrames()[1]->getCodeGrowth());
+        self::assertEquals(620, $statistic->getTimeFrames()[2]->getCodeGrowth());
+    }
 }

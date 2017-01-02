@@ -77,7 +77,11 @@ class StatisticService
 
         $startLoc = $this->linesOfCodeService->getLinesOfCode($commits[0]);
         $endLoc = $this->linesOfCodeService->getLinesOfCode(end($commits));
-        return new SummaryStatistic($startLoc, $endLoc, $timeFrames);
+        $summaryStatistic =  new SummaryStatistic($startLoc, $endLoc, $timeFrames);
+
+        $this->calculateCodeGrowth($summaryStatistic, $commits);
+
+        return $summaryStatistic;
     }
 
     /**
@@ -114,6 +118,25 @@ class StatisticService
             } elseif ($i > 0) {
                 $lastNumberOfTests = $timeFrames[$i - 1]->getNumberOfTests();
                 $timeFrame->setNumberOfTests($lastNumberOfTests);
+            }
+        }
+    }
+
+    /**
+     * @param SummaryStatistic $statistic
+     * @param Commit[] $commits
+     */
+    private function calculateCodeGrowth(SummaryStatistic $statistic, array $commits)
+    {
+        $totalDifference = $statistic->getTotalGrowth();
+        $totalDayDelta = $commits[0]->getDate()->diffInDays(end($commits)->getDate());
+
+        if ($totalDayDelta > 0) {
+            $growthPerDay = $totalDifference / $totalDayDelta;
+
+            foreach ($statistic->getTimeFrames() as $timeFrame) {
+                $frameDayDelta = $timeFrame->getStart()->diffInDays($timeFrame->getEnd()) + 1;
+                $timeFrame->setCodeGrowth($frameDayDelta * $growthPerDay);
             }
         }
     }

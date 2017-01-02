@@ -36,6 +36,11 @@ class TimeFrame
     private $numberOfTests = 0;
 
     /**
+     * @var int
+     */
+    private $codeGrowth = 0;
+
+    /**
      * TimeFrame constructor.
      * @param string $label
      * @param Carbon $start
@@ -102,5 +107,23 @@ class TimeFrame
     public function getNumberOfTests(): int
     {
         return $this->numberOfTests;
+    }
+
+    /**
+     * Get proportionately average code growth
+     *
+     * @return int
+     */
+    public function getCodeGrowth(): int
+    {
+        return $this->codeGrowth;
+    }
+
+    /**
+     * @param int $codeGrowth
+     */
+    public function setCodeGrowth(int $codeGrowth)
+    {
+        $this->codeGrowth = $codeGrowth;
     }
 }
