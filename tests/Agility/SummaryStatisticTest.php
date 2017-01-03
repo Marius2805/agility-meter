@@ -22,18 +22,6 @@ class SummaryStatisticTest extends \PHPUnit_Framework_TestCase
         self::assertEquals(-100, $statistic->getTotalGrowth());
     }
 
-    /**
-     * @param int $absoluteChanges
-     * @return TimeFrame|\PHPUnit_Framework_MockObject_MockObject
-     */
-    protected function getTimeFrame(int $absoluteChanges) : TimeFrame
-    {
-        $timeFrame = $this->getMockBuilder(TimeFrame::class)->disableOriginalConstructor()->getMock();
-        $timeFrame->method('getAbsoluteTotalChanges')->willReturn($absoluteChanges);
-
-        return $timeFrame;
-    }
-
     public function test_getAbsoluteChanges_sumCorrect()
     {
         $statistic = new SummaryStatistic(0, 0, [
@@ -52,5 +40,39 @@ class SummaryStatisticTest extends \PHPUnit_Framework_TestCase
         ]);
 
         self::assertEquals(2800, $statistic->getNormalizedChanges());
+    }
+
+    public function test_getChangeRatio_valueCorrect()
+    {
+        $statistic = new SummaryStatistic(39000, 40000, [
+            $this->getTimeFrame(1000),
+            $this->getTimeFrame(2000)
+        ]);
+
+        self::assertEquals(0.05, $statistic->getChangeRatio());
+    }
+
+    public function test_getTestCoverageRatio_valueCorrect()
+    {
+        $statistic = new SummaryStatistic(39000, 40000, [
+            $this->getTimeFrame(1000, 100),
+            $this->getTimeFrame(2000, 1000)
+        ]);
+
+        self::assertEquals(0.025, $statistic->getTestCoverageRatio());
+    }
+
+    /**
+     * @param int $absoluteChanges
+     * @param int $numberOfTests
+     * @return TimeFrame|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function getTimeFrame(int $absoluteChanges, int $numberOfTests = 0) : TimeFrame
+    {
+        $timeFrame = $this->getMockBuilder(TimeFrame::class)->disableOriginalConstructor()->getMock();
+        $timeFrame->method('getAbsoluteTotalChanges')->willReturn($absoluteChanges);
+        $timeFrame->method('getNumberOfTests')->willReturn($numberOfTests);
+
+        return $timeFrame;
     }
 }

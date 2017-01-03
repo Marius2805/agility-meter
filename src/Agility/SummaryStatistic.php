@@ -106,4 +106,20 @@ class SummaryStatistic
 
         return $this->normalizedChanges;
     }
+
+    /**
+     * @return float
+     */
+    public function getChangeRatio(): float
+    {
+        return $this->getNormalizedChanges() / $this->endLinesOfCode;
+    }
+
+    /**
+     * @return float
+     */
+    public function getTestCoverageRatio(): float
+    {
+        return end($this->timeFrames)->getNumberOfTests() / $this->endLinesOfCode;
+    }
 }
