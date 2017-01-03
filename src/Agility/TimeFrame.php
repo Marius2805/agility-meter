@@ -8,7 +8,7 @@ use Marius2805\AgilityMeter\Src\VersionControl\CommitDifference;
  * Class TimeFrame
  * @package Marius2805\AgilityMeter\Src\Agility
  */
-class TimeFrame
+class TimeFrame implements \JsonSerializable
 {
     /**
      * @var string
@@ -158,5 +158,21 @@ class TimeFrame
     public function getNormalizedTotalChanges(): int
     {
         return $this->getAbsoluteTotalChanges() - $this->codeGrowth;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    function jsonSerialize()
+    {
+        return [
+            'label'             => $this->label,
+            'start'             => $this->start->format('d.m.Y'),
+            'end'               => $this->end->format('d.m.Y'),
+            'codeGrowth'        => $this->getCodeGrowth(),
+            'numberOfTests'     => $this->numberOfTests,
+            'absoluteChanges'   => $this->getAbsoluteTotalChanges(),
+            'normalizedChanges' => $this->getNormalizedTotalChanges()
+        ];
     }
 }

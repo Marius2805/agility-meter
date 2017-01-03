@@ -25,7 +25,7 @@ class TimeFrameTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->timeFrame = new TimeFrame('test', new Carbon(), new Carbon());
+        $this->timeFrame = new TimeFrame('test', Carbon::today(), Carbon::tomorrow());
         $this->dummyCommitDiff = new CommitDifference(
             new Commit('a1', new Carbon()),
             new Commit('b1', new Carbon()), [
@@ -59,5 +59,25 @@ class TimeFrameTest extends \PHPUnit_Framework_TestCase
         $this->timeFrame->setCodeGrowth(10);
 
         self::assertEquals(50, $this->timeFrame->getNormalizedTotalChanges());
+    }
+
+    public function test_jsonSerialize_correct()
+    {
+        $expected = [
+            'label'             => 'test',
+            'start'             => Carbon::today()->format('d.m.Y'),
+            'end'               => Carbon::tomorrow()->format('d.m.Y'),
+            'codeGrowth'        => 10,
+            'numberOfTests'     => 150,
+            'absoluteChanges'   => 60,
+            'normalizedChanges' => 50
+        ];
+
+        $this->timeFrame->addCommitDiff($this->dummyCommitDiff);
+        $this->timeFrame->addCommitDiff($this->dummyCommitDiff);
+        $this->timeFrame->setCodeGrowth(10);
+        $this->timeFrame->setNumberOfTests(150);
+
+        self::assertEquals($expected, $this->timeFrame->jsonSerialize());
     }
 }
