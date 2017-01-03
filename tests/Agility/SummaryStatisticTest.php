@@ -62,6 +62,28 @@ class SummaryStatisticTest extends \PHPUnit_Framework_TestCase
         self::assertEquals(0.025, $statistic->getTestCoverageRatio());
     }
 
+    public function test_jsonSerialize_correct()
+    {
+        $expected = [
+            'startLinesOfCode'  => 39000,
+            'endLinesOfCode'    => 40000,
+            'projectGrowth'     => 1000,
+            'absoluteChanges'   => 3000,
+            'normalizedChanges' => 2000,
+            'changeRatio'       => 0.05,
+            'testCoverageRatio' => 0.025,
+            'timeFrames'        => [
+                $this->getTimeFrame(1000, 100),
+                $this->getTimeFrame(2000, 1000)
+            ]
+        ];
+
+        $statistic = new SummaryStatistic(39000, 40000, $expected['timeFrames']);
+        $result = $statistic->jsonSerialize();
+
+        self::assertEquals($expected, $result);
+    }
+
     /**
      * @param int $absoluteChanges
      * @param int $numberOfTests

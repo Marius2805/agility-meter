@@ -5,7 +5,7 @@ namespace Marius2805\AgilityMeter\Src\Agility;
  * Class SummaryStatistic
  * @package Marius2805\AgilityMeter\Src\Agility
  */
-class SummaryStatistic
+class SummaryStatistic implements \JsonSerializable
 {
     /**
      * @var int
@@ -121,5 +121,22 @@ class SummaryStatistic
     public function getTestCoverageRatio(): float
     {
         return end($this->timeFrames)->getNumberOfTests() / $this->endLinesOfCode;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'startLinesOfCode'  => $this->startLinesOfCode,
+            'endLinesOfCode'    => $this->endLinesOfCode,
+            'projectGrowth'     => $this->getTotalGrowth(),
+            'absoluteChanges'   => $this->getAbsoluteChanges(),
+            'normalizedChanges' => $this->getNormalizedChanges(),
+            'changeRatio'       => $this->getChangeRatio(),
+            'testCoverageRatio' => $this->getTestCoverageRatio(),
+            'timeFrames'        => $this->timeFrames
+        ];
     }
 }
