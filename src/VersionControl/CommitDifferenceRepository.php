@@ -57,10 +57,17 @@ class CommitDifferenceRepository
         foreach ($lines as $line) {
             $cells = explode('|', $line);
             $fileName = trim($cells[0]);
+            $changeStats = trim($cells[1]);
 
-            $stats = explode(' ', trim($cells[1]))[1];
-            $addedRows = substr_count($stats, '+');
-            $removedRows = substr_count($stats, '-');
+            if (strpos($changeStats, ' ') !== false) {
+                $stats = explode(' ', $changeStats)[1];
+                $addedRows = substr_count($stats, '+');
+                $removedRows = substr_count($stats, '-');
+            } else {
+                // Empty file was added
+                $addedRows = 0;
+                $removedRows = 0;
+            }
 
             $fileChanges[] = new FileChange($fileName, $addedRows, $removedRows);
         }

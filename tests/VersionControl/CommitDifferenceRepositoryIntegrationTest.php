@@ -139,4 +139,16 @@ class CommitDifferenceRepositoryIntegrationTest extends RepositoryIntegrationTes
         $difference = $this->differenceRepository->getDifference($previous, $current);
         self::assertCount(0, $difference->getFileChanges());
     }
+
+    public function test_getDifference_emptyFileAdded()
+    {
+        $commits = $this->commitRepository->getSince(self::BASE_COMMIT);
+        $previous = $commits[9];
+        $current = $commits[10];
+
+        $difference = $this->differenceRepository->getDifference($previous, $current);
+        self::assertCount(1, $difference->getFileChanges());
+        self::assertEquals(0, $difference->getFileChanges()[0]->getAddedRows());
+        self::assertEquals(0, $difference->getFileChanges()[0]->getRemovedRows());
+    }
 }
