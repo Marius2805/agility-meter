@@ -25,18 +25,33 @@ class CommitRepository
     }
 
     /**
+     * @param string $commitHash
+     *
+     * @return Commit
+     */
+    public function get(string $commitHash) : Commit
+    {
+        $lines = $this->getGitLog();
+
+        for ($i = 0; $i < count($lines); $i = $i + 2) {
+            $hash = $lines[$i + 1];
+
+            if ($hash == $commitHash) {
+                $date = new Carbon($lines[$i]);
+                return new Commit($hash, $date);
+            }
+        }
+
+        throw new \InvalidArgumentException('Commit with hash ' . $commitHash . ' not found!');
+    }
+
+    /**
      * @param string $baseHash
      * @return Commit[]
      */
     public function getSince(string $baseHash) : array
     {
-        $process = new Process('cd ' . $this->directory . ' && git log --all | grep -i \'^commit\|^Date\' | sed s/\'commit \'//g | sed s/\'Date: *\'//g');
-        $process->run();
-
-        $lines = explode("\n", $process->getOutput());
-        $lines = array_filter($lines);
-        $lines = array_reverse($lines);
-
+        $lines = $this->getGitLog();
         return $this->parseGitLog($lines, $baseHash);
     }
 
@@ -46,6 +61,21 @@ class CommitRepository
     public function getDirectory(): string
     {
         return $this->directory;
+    }
+
+    /**
+     * @return array
+     */
+    private function getGitLog() : array
+    {
+        $process = new Process('cd ' . $this->directory . ' && git log --all | grep -i \'^commit\|^Date\' | sed s/\'commit \'//g | sed s/\'Date: *\'//g');
+        $process->run();
+
+        $lines = explode("\n", $process->getOutput());
+        $lines = array_filter($lines);
+        $lines = array_reverse($lines);
+
+        return $lines;
     }
 
     /**

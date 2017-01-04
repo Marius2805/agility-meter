@@ -45,4 +45,20 @@ class CommitRepositoryIntegrationTest extends RepositoryIntegrationTestCase
         self::assertEquals('2016-12-28 22:43:19', $commits[0]->getDate()->format('Y-m-d H:i:s'));
         self::assertEquals('2016-12-28 22:43:56', $commits[1]->getDate()->format('Y-m-d H:i:s'));
     }
+
+    public function test_get_hashCorrect()
+    {
+        $commit = $this->repository->get('f846b6b6e659a869fc4db84cac0b8610d5e73866');
+
+        self::assertInstanceOf(Commit::class, $commit);
+        self::assertEquals('f846b6b6e659a869fc4db84cac0b8610d5e73866', $commit->getHash());
+    }
+
+    public function test_get_dateCorrect()
+    {
+        $commit = $this->repository->get('f846b6b6e659a869fc4db84cac0b8610d5e73866');
+
+        self::assertInstanceOf(Commit::class, $commit);
+        self::assertEquals('2016-12-28 22:43:19', $commit->getDate()->format('Y-m-d H:i:s'));
+    }
 }
